@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
 	}
 
 	if (optind < argc) {
-		// find number 
 		while (optind < argc) {
 			for (int i = 0; argv[optind][i] != '\0'; ++i) {
 				if (!isdigit(argv[optind][i])) {
@@ -43,9 +42,9 @@ int main(int argc, char** argv) {
 					i = 0;
 				}
 			}
-			unsigned long long f = factorial(atoi(argv[optind]));
+			unsigned long long res = factorial(atoll(argv[optind]));
 			++optind;
-			printf("%llu\n", f);
+			printf("%llu\n", res);
 		}
 	} else {
 		throw_error(argc);
@@ -98,8 +97,8 @@ int parse(const int argc, char* argv[]) {
 	return STATUS;
 }
 
-unsigned long long factorial(unsigned int number) {
-	long long res = 1; 
+unsigned long long factorial(unsigned long long number) {
+	unsigned long long res = 1; 
 	for (; number > 1; number--) {
 		res *= number;
 	}
