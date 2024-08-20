@@ -12,7 +12,9 @@
 
 #define FGRED "\x1B[31m"
 #define FGNORMAL "\x1B[0m"
-#define FUNDERLINE "\x1B[4m"
+#define FTUNDERLINE "\x1B[4m"
+
+#define OPENMODE "w+" 
 
 
 static char* flags[FLAGC][DESCC] = {
@@ -23,7 +25,7 @@ static char* flags[FLAGC][DESCC] = {
 
 int main(int argc, char** argv) {
 	int parse_status = parse(argc, argv);
-
+	
 	switch (parse_status) {
 		case EXIT_HELP: 
 			help();
@@ -33,24 +35,21 @@ int main(int argc, char** argv) {
 			goto exit_failure; 
 			break;
 	}
-
-	if (optind < argc) {
+	
+	int has_opt = 0; 
+	if (optind < argc) { 
 		while (optind < argc) {
-			for (int i = 0; argv[optind][i] != '\0'; ++i) {
-				if (!isdigit(argv[optind][i])) {
-					++optind;
-					i = 0;
-				}
+			if (strnumeric(argv[optind]) == 0) {
+				unsigned long long res = factorial(atoll(argv[optind]));
+				++has_opt;
+				printf("%llu\n", res);
 			}
-			unsigned long long res = factorial(atoll(argv[optind]));
 			++optind;
-			printf("%llu\n", res);
 		}
-	} else {
-		throw_error(argc);
+	} 	
+	if (!has_opt) {
+		throw_error();
 	}
-	
-	
 	exit_success:
 	exit(EXIT_SUCCESS);
 
@@ -106,7 +105,7 @@ unsigned long long factorial(unsigned long long number) {
 }
 
 void help(void) {
-	printf("fact - Get factorial of an integer\n");
+	printf("fact - Get factorial of an unsigned(positive) integer\n");
 	putchar('\n');
 	printf("Usage: fact [OPTION...] [INTEGER]\n");
 	putchar('\n');
@@ -116,8 +115,16 @@ void help(void) {
 	}
 }
 
+int strnumeric(const char *str) {
+	for (int i = 0; str[i] != '\0'; ++i) {
+		if (!isdigit(str[i])) {
+			return -1; 
+		}
+	}
+	return 0;
+}
 
-void throw_error(const int argc) {
+void throw_error(void) {
 	printf("%serror: %s", FGRED, FGNORMAL);
-	printf("arguments expected 1, got %d. (see: %sfact --help%s)\n", argc - 1, FUNDERLINE, FGNORMAL);
+	printf("expected unsigned integer (see: %sfact --help%s)\n", FTUNDERLINE, FGNORMAL);
 }
