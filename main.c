@@ -7,6 +7,7 @@
 #define DESCC 3
 #define FLAGC 2
 #define VERSC 2
+#define BUFSIZE 64
 
 #define EXIT_HELP 2
 
@@ -17,15 +18,20 @@
 #define OPENMODE "w+" 
 
 
+static FILE* ostream = 0; 
+static char* pathname = 0;
+static unsigned long long results[BUFSIZE];
+
 static char* flags[FLAGC][DESCC] = {
 	{ "-h", "--help", "Show help page", },
-	{ "-t", "--test", "Test flag, does nothing", },
+	{ "-o", "--output", "Path to output file, caution: this will\n\t\t\toverwrite file contents!" },
 };
 
 
 int main(int argc, char** argv) {
 	int parse_status = parse(argc, argv);
-	
+	ostream = stdout; 
+
 	switch (parse_status) {
 		case EXIT_HELP: 
 			help();
@@ -36,20 +42,33 @@ int main(int argc, char** argv) {
 			break;
 	}
 	
-	int has_opt = 0; 
+	int buflen = 0; 
 	if (optind < argc) { 
-		while (optind < argc) {
+		int i = 0;
+		while (optind < argc && i != BUFSIZE) {
 			if (strnumeric(argv[optind]) == 0) {
-				unsigned long long res = factorial(atoll(argv[optind]));
-				++has_opt;
-				printf("%llu\n", res);
+				results[i++] = factorial(atoll(argv[optind]));
+				++buflen;
 			}
 			++optind;
 		}
 	} 	
-	if (!has_opt) {
-		throw_error();
+	if (!buflen) {
+		arg_error();
+	} else {
+		if (pathname != NULL) {
+			ostream = fopen(pathname, OPENMODE);
+			if (ostream == NULL) {
+				file_open_error(pathname);
+				goto exit_failure; 
+			}
+		} 
+		for (int i = 0; i < buflen; ++i) {
+			fprintf(ostream, "%llu\n", results[i]);
+		}
+		fclose(ostream);
 	}
+
 	exit_success:
 	exit(EXIT_SUCCESS);
 
@@ -59,12 +78,13 @@ int main(int argc, char** argv) {
 
 int parse(const int argc, char* argv[]) {
 	int STATUS = 0;
-	int c, i;
+	int c;
 	
-	static char* short_options = "ht";
+	static char* short_options = "ho:";
 	static struct option long_options[] = {
-		{ "help", no_argument, 0, 'h' },
-		{ 0, 	  0, 		   0, 0 }
+		{ "help",   no_argument,       0, 'h' },
+		{ "output", required_argument, 0, 'o' },
+		{ 0, 	    0, 		           0,  0  }
 	};
 
 	
@@ -80,19 +100,20 @@ int parse(const int argc, char* argv[]) {
 		switch (c) {
 			case 'h': 
 				STATUS = EXIT_HELP;
-				break;
-			case 't':
-				printf("test option");
+				goto exit; 
+			case 'o':
+				pathname = optarg; 
 				break;
 			case '?':
 				STATUS = EXIT_FAILURE; 
-				break;
+				goto exit;
 			default: 
 				printf("?? getopt returned character code 0x%x ??\n", c);
 				STATUS = EXIT_FAILURE;
-				break; 
+				goto exit; 
 		}
 	}
+	exit:
 	return STATUS;
 }
 
@@ -104,8 +125,9 @@ unsigned long long factorial(unsigned long long number) {
 	return res;
 }
 
-void help(void) {
-	printf("fact - Get factorial of an unsigned(positive) integer\n");
+void help() {
+	printf("fact - Get factorial of an unsigned(positive) integer and\n");
+	printf("       print it on standard output or write in file with -o option\n");
 	putchar('\n');
 	printf("Usage: fact [OPTION...] [INTEGER]\n");
 	putchar('\n');
@@ -124,7 +146,12 @@ int strnumeric(const char *str) {
 	return 0;
 }
 
-void throw_error(void) {
+void arg_error() {
 	printf("%serror: %s", FGRED, FGNORMAL);
 	printf("expected unsigned integer (see: %sfact --help%s)\n", FTUNDERLINE, FGNORMAL);
+}
+
+void file_open_error(const char* optarg) {
+	printf("%serror: %s", FGRED, FGNORMAL);
+	printf("%s can't open such file or directory\n", optarg); 
 }

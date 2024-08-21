@@ -1,9 +1,11 @@
 
-void help(void); 
+void help(); 
 
 int parse(const int argc, char* argv[]);
 
-void throw_error(void); 
+void arg_error(); 
+
+void file_open_error(const char* optarg);
 
 int strnumeric(const char* str);
 
