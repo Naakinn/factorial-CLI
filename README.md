@@ -1,6 +1,6 @@
 # factorial CLI
 ## Note:
-The biggest standard unsigned integer type in C is `unsigned long long`(uint64_t) whose size is implementation-defined and othen is 64 bits. Thus this program can't compute factorial of a number bigger than 20(
+The biggest unsigned integer type in C is `unsigned long long`(uint64_t) whose size is implementation-defined and othen is 64 bits. Thus this program can't compute factorial of a number bigger than 20(
 
 When unsigned variable is assigned to a value bigger than it's type can hold, the value resets to 0, for instance
 ```
