@@ -5,11 +5,12 @@
 #include "fact.h"
 
 #define DESCC 3
-#define FLAGC 2
+#define FLAGC 3
 #define VERSC 2
 #define BUFSIZE 64
 
 #define EXIT_HELP 2
+#define EXIT_VERSION 3
 
 #define FGRED "\x1B[31m"
 #define FGNORMAL "\x1B[0m"
@@ -17,6 +18,7 @@
 
 #define OPENMODE "w+" 
 
+float VERSION = 1.0;
 
 static FILE* ostream = 0; 
 static char* pathname = 0;
@@ -25,6 +27,7 @@ static unsigned long long results[BUFSIZE];
 static char* flags[FLAGC][DESCC] = {
 	{ "-h", "--help", "Show help page", },
 	{ "-o", "--output", "Path to output file, caution: this will\n\t\t\toverwrite file contents!" },
+	{ "-v", "--version", "Show version" } 
 };
 
 
@@ -40,6 +43,9 @@ int main(int argc, char** argv) {
 		case EXIT_FAILURE: 
 			goto exit_failure; 
 			break;
+		case EXIT_VERSION: 
+			printf("fact v%.1f\n", VERSION); 
+			goto exit_success; 
 	}
 	
 	int buflen = 0; 
@@ -80,11 +86,12 @@ int parse(const int argc, char* argv[]) {
 	int STATUS = 0;
 	int c;
 	
-	static char* short_options = "ho:";
+	static char* short_options = "vho:";
 	static struct option long_options[] = {
-		{ "help",   no_argument,       0, 'h' },
-		{ "output", required_argument, 0, 'o' },
-		{ 0, 	    0, 		           0,  0  }
+		{ "help",    no_argument,       0, 'h' },
+		{ "output",  required_argument, 0, 'o' },
+		{ "version", no_argument,       0, 'v' },
+		{ 0, 	    0, 		            0,  0  }
 	};
 
 	
@@ -104,6 +111,9 @@ int parse(const int argc, char* argv[]) {
 			case 'o':
 				pathname = optarg; 
 				break;
+			case 'v': 
+				STATUS = EXIT_VERSION;
+				goto exit; 
 			case '?':
 				STATUS = EXIT_FAILURE; 
 				goto exit;
